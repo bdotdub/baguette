@@ -74,7 +74,19 @@
 
     window.FarmViews.renderHeader(byId('farm-header'), ctx);
     window.FarmViews.renderRail(byId('farm-rail'), ctx);
-    window.FarmViews.renderGridHead(byId('farm-grid-head'), ctx);
+
+    // Skip re-rendering the grid head (which contains the search input)
+    // when it currently holds focus — destroying and recreating the DOM
+    // would lose the caret position. Just patch the visible count in place.
+    const activeSearch = document.activeElement &&
+      document.activeElement === document.querySelector('#farm-grid-head [data-role="search"]');
+    if (activeSearch) {
+      const numEl = document.querySelector('#farm-grid-head .num');
+      if (numEl) numEl.textContent = ctx.visible;
+    } else {
+      window.FarmViews.renderGridHead(byId('farm-grid-head'), ctx);
+    }
+
     window.FarmViews.renderCli(byId('farm-cli'), ctx);
 
     const host = byId(VIEW_HOST_ID);
@@ -135,7 +147,7 @@
     // Search + view toggle
     const search = document.querySelector('#farm-grid-head [data-role="search"]');
     if (search) {
-      search.oninput = () => { this.filter.search = search.value; this.renderAll(); search.focus(); };
+      search.oninput = () => { this.filter.search = search.value; this.renderAll(); };
     }
     document.querySelectorAll('#farm-grid-head [data-view]').forEach(b =>
       b.onclick = () => { this.view = b.dataset.view; this.renderAll(); });
